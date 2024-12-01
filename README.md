@@ -289,6 +289,123 @@ Comandos
     ORDER BY Cantidad_Comentarios DESC;
 
 
+##Queries
+
+## Inserción
+
+    Nuevo Usuario
+    CREATE (:Empleado {nombre: 'Andrés', apellidos: 'Pacheco', edad: 29, documento: '1016', codigo_empresa: 'EMP016', cargo: 'Empleado'});
+    
+    Nueva realcion de amistad
+    MATCH (a:Empleado {nombre: 'Andrés'}), (b:Empleado {nombre: 'Lorena'})
+    CREATE (a)-[:ES_AMIGO_DE]->(b)
+    CREATE (b)-[:ES_AMIGO_DE]->(a);
+    
+    Nuevo Post para este empleado
+    MATCH (empleado:Empleado {nombre: 'Andrés'})
+    CREATE (post:Post {fecha: date('2024-11-30'), titulo: 'Sostenibilidad', descripcion: 'Ideas para prácticas sostenibles en la empresa', likes: 0})
+    CREATE (empleado)-[:PUBLICA]->(post);
+    
+    Insertar comentarios
+    MATCH (post:Post {titulo: 'Sostenibilidad'}), (empleado:Empleado {nombre: 'Ana'})
+    CREATE (coment1:Comentario {fecha: date('2024-11-30'), descripcion: 'Excelente propuesta, muy importante.'})
+    CREATE (post)-[:TIENE_COMENTARIO]->(coment1);
+    MATCH (post:Post {titulo: 'Sostenibilidad'}), (empleado:Empleado {nombre: 'Carlos'})
+    CREATE (coment2:Comentario {fecha: date('2024-11-30'), descripcion: 'Gran iniciativa, cuenta con mi apoyo.'})
+    CREATE (post)-[:TIENE_COMENTARIO]->(coment2);
+
+
+## Actualización
+
+    Actualizar la información de un empleado
+    MATCH (empleado:Empleado {nombre: 'Andrés'})
+    SET empleado.apellidos = 'López Pacheco', empleado.edad = 30;
+    
+    Actualizar el contenido de un POST
+    MATCH (post:Post {titulo: 'Sostenibilidad'})
+    SET post.descripcion = 'Nuevas ideas para prácticas sostenibles en toda la empresa.';
+
+    Actualizar comentario
+    MATCH (coment:Comentario {descripcion: 'Gran iniciativa, cuenta con mi apoyo.'})
+    SET coment.descripcion = 'Excelente idea, estoy totalmente de acuerdo.';
+
+## Eliminación
+
+    Eliminar un empleado
+    MATCH (empleado:Empleado {nombre: 'Andrés'})
+    DETACH DELETE empleado;
+
+    Eliminar un reporte de acoso laboral
+    MATCH (reporte:ReporteDeAcoso {naturaleza: 'discriminación'})
+    DETACH DELETE reporte;
+
+    Eliminar un POST
+    MATCH (post:Post {titulo: 'Sostenibilidad'})
+    DETACH DELETE post;
+
+## Consultas
+
+     Consultar el listado de empleados que desempeñan un rol
+     MATCH (empleado:Empleado {cargo: 'Empleado'})
+     RETURN empleado.nombre, empleado.apellidos;
+
+    Consultar los empleados a cargo de un empleado dado
+    MATCH (jefe:Empleado {nombre: 'Juan'})-[:ES_JEFE_DE]->(subordinado:Empleado)
+    RETURN subordinado.nombre, subordinado.apellidos;
+
+    Consulatar amigos de un empleado
+    MATCH (empleado:Empleado {nombre: 'Lorena'})-[:ES_AMIGO_DE]->(amigo:Empleado)
+    RETURN amigo.nombre, amigo.apellidos;
+
+    Consultar los amigos de los amigos de un empleado
+
+    MATCH (empleado:Empleado {nombre: 'Lorena'})-[:ES_AMIGO_DE]->(:Empleado)-[:ES_AMIGO_DE]->(amigos_de_amigos:Empleado)
+    WHERE NOT (empleado)-[:ES_AMIGO_DE]->(amigos_de_amigos)
+    RETURN amigos_de_amigos.nombre, amigos_de_amigos.apellidos;
+
+    Consultar el empleado con más amigos
+    MATCH (empleado:Empleado)-[:ES_AMIGO_DE]->(amigo:Empleado)
+    WITH empleado, count(amigo) AS total_amigos
+    ORDER BY total_amigos DESC
+    LIMIT 1
+    RETURN empleado.nombre, empleado.apellidos, total_amigos;
+
+
+## Consultas de POST
+    Consultar los POST de un empleado
+    MATCH (empleado:Empleado {nombre: 'Carlos'})-[:PUBLICA]->(post:Post)
+    RETURN post.titulo, post.descripcion, post.fecha;
+
+    Consultar los comentarios de un POST
+    MATCH (post:Post {titulo: 'Sostenibilidad'})-[:TIENE_COMENTARIO]->(coment:Comentario)
+    RETURN coment.descripcion, coment.fecha;
+
+    Consultar los empleados que le dieron me gusta a un POST
+    MATCH (empleado:Empleado)-[:DA_LIKE_A]->(post:Post {titulo: 'Sostenibilidad'})
+    RETURN empleado.nombre, empleado.apellidos;
+
+    Consultar los 3 POST con más me gusta
+    MATCH (post:Post)
+    RETURN post.titulo, post.likes
+    ORDER BY post.likes DESC
+    LIMIT 3;
+
+## Consultas sobre reportes de acoso
+
+    Dado un cargo, consultar los empleados que tengan reportes de acoso laboral para ese cargo
+    MATCH (reporte:ReporteDeAcoso)-[:ACUSADO_ES]->(empleado:Empleado {cargo: 'Empleado'})
+    RETURN empleado.nombre, empleado.apellidos, reporte.fecha, reporte.naturaleza;
+
+    Consultar el número de reportes por acoso realizados por un empleado
+    MATCH (reportero:Empleado {nombre: 'Carlos'})-[:REPORTA_ACOSO]->(reporte:ReporteDeAcoso)
+    RETURN count(reporte) AS total_reportes;
+
+
+
+
+
+
+
 
 
 
